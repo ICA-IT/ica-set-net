@@ -1,0 +1,157 @@
+[Package]
+version: 1
+depends: 
+
+[Product]
+type: localboot
+id: ica-set-net
+name: NetInterfaceSetup
+description: Set the primary ethernet interface parameters
+advice: 
+version: 1.0
+priority: 0
+licenseRequired: False
+productClasses: 
+setupScript: setup32.ins
+uninstallScript: 
+updateScript: 
+alwaysScript: 
+onceScript: 
+customScript: 
+userLoginScript: 
+
+[ProductProperty]
+type: unicode
+name: prime_wins_server
+multivalue: False
+editable: True
+description: If winssource == static, set the primary WINS server address to this IPv4 value (MUST be in x.x.x.x format)
+values: ["10.0.0.253"]
+default: ["10.0.0.253"]
+
+[ProductProperty]
+type: unicode
+name: winssource
+multivalue: False
+editable: True
+description: If wins_server_mode == true, set the WINS server source to this value
+values: ["dhcp", "none", "static"]
+default: ["static"]
+
+[ProductProperty]
+type: bool
+name: wins_server_mode
+description: true -> set the primary WINS server; false -> don't mess with current WINS settings
+default: True
+
+[ProductProperty]
+type: bool
+name: validate_second_dns_server
+description: true -> test the validity of the second DNS server; false -> don't
+default: False
+
+[ProductProperty]
+type: unicode
+name: second_dns_server_index
+multivalue: False
+editable: True
+description: Where in the list of DNS servers should this server go? MUST be a positive integer value. (if you don't understand, use the default)
+values: ["2"]
+default: ["2"]
+
+[ProductProperty]
+type: unicode
+name: second_dns_server
+multivalue: False
+editable: True
+description: If dnssource == static AND the value of this parameter is not set to the default value "(none)",  set the second DNS server address to this IPv4 value (MUST be in x.x.x.x format)
+values: ["(none)"]
+default: ["(none)"]
+
+[ProductProperty]
+type: unicode
+name: dns_register_mode
+multivalue: False
+editable: True
+description: If dnssource == static, set the dns registartion mode: None specifies whether to disable dynamic update. Primary registers the computer name under the primary DNS suffix only. Both register the computer name under both the primary DNS suffix as well as under the connection-specific suffix.
+values: ["both", "none", "primary"]
+default: ["both"]
+
+[ProductProperty]
+type: unicode
+name: prime_dns_server
+multivalue: False
+editable: True
+description: If dnssource == static, set the primary DNS server address to this IPv4 value (MUST be in x.x.x.x format)
+values: ["10.0.0.253"]
+default: ["10.0.0.253"]
+
+[ProductProperty]
+type: unicode
+name: dnssource
+multivalue: False
+editable: False
+description: If dnsserver_mode == true, set the DNS server source to this value
+values: ["dhcp", "none", "static"]
+default: ["static"]
+
+[ProductProperty]
+type: bool
+name: dnsserver_mode
+description: true -> set the DNS server; false -> don't mess with current DNS settings
+default: True
+
+[ProductProperty]
+type: unicode
+name: staticgateway
+multivalue: False
+editable: True
+description: If DHCP_enable == false, set the interface gateway address to this IPv4 value (MUST be in x.x.x.x format)
+values: ["10.0.0.1"]
+default: ["10.0.0.1"]
+
+[ProductProperty]
+type: unicode
+name: staticmask
+multivalue: False
+editable: True
+description: If DHCP_enable == false, set the interface network mask to this IPv4 value (MUST be in 255.x.x.x format)
+values: ["255.255.255.0"]
+default: ["255.255.255.0"]
+
+[ProductProperty]
+type: unicode
+name: staticaddress
+multivalue: False
+editable: True
+description: If DHCP_enable == false, set the interface address to this IPv4 value (MUST be in x.x.x.x format)
+values: ["10.0.0.0"]
+default: ["10.0.0.0"]
+
+[ProductProperty]
+type: bool
+name: dhcp_enable
+description: true -> use dhcp; false -> set static address
+default: True
+
+[ProductProperty]
+type: bool
+name: setinterface
+description: False -> List the details of all interfaces (only); true -> list and set an interface
+default: True
+
+[ProductProperty]
+type: unicode
+name: interfacename
+multivalue: False
+editable: True
+description: Name of the Ethernet interface
+values: ["Ethernet"]
+default: ["Ethernet"]
+
+[Changelog]
+ica-set-net (1.0-1) stable; urgency=low
+
+Project created with opsi Package Builder 8.2.2
+
+ -- John Kuras <jkuras@islandchristianacademy.com>  Sun, 18 Aug 2019 19:37:28 +0000

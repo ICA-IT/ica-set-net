@@ -1,0 +1,253 @@
+; ----------------------------------------------------------------
+; ----------------------------------------------------------------
+
+;****************************************
+; SETUPTYPE      custom
+;****************************************
+; PRODUCTID      ica-set-net
+; SETUPFILE      custom	
+;****************************************
+; LICENSE         false    
+; PRODUCTDESC    Set the primary ethernet interface parameters
+
+; PRODUCTNAME    NetInterfaceSetup
+; PRODUCTSIZE    9 MB
+; PRODUCTVER     1
+;****************************************
+; SETUPSCRIPT    setup32.ins
+;****************************************
+; MSIID          
+; USE-MST        
+; INSTALLDIR     c:\users
+;****************************************
+; TIMESTAMP      8/18/2019 21:14:02
+;****************************************
+;
+;
+;netsh interface ip show interface
+;netsh interface ip show config
+;netsh interface ip set address    name="Ethernet" source=static addr=IPAddress mask=255.255.255.0 gateway=10.0.0.1
+;netsh interface ip set dnsserver  name="Ethernet" source=static addr=10.0.0.253 register=both
+;netsh interface ip add dnsserver  name="Ethernet"               addr=10.0.0.78  validate=no index=2
+;netsh interface ip set winsserver name="Ethernet" source=static addr=10.0.0.253
+;
+;
+;netsh interface ip set address    name="Ethernet" source=dhcp
+;netsh interface ip set dnsserver  name="Ethernet" source=dhcp register=both
+;netsh interface ip set winsserver name="Ethernet" source=dhcp
+;
+;netsh interface ip show config
+
+[Actions]
+requiredWinstVersion >= "4.11.4.3"
+ScriptErrorMessages = false
+
+DefVar $SetupType$
+DefVar $ProductId$ 
+DefVar $Setupfile$ 
+DefVar $InstallDir$
+DefVar $MinimumSpace$
+DefVar $ExitCode$
+DefVar $ErrorMsg$
+DefVar $LicenseRequired$
+DefVar $LicenseKey$
+DefVar $LicensePool$
+DefVar $MsiId$
+DefVar $NsisInstallBatch$
+DefVar $LogDir$
+DefVar $ProductName$
+
+DefVar $PROP_prime_wins_server$
+DefVar $PROP_winssource$
+DefVar $PROP_wins_server_mode$
+DefVar $PROP_validate_second_dns_server$
+DefVar $PROP_second_dns_server_index$
+DefVar $PROP_second_dns_server$
+DefVar $PROP_dns_register_mode$
+DefVar $PROP_prime_dns_server$
+DefVar $PROP_dnssource$
+DefVar $PROP_dnsserver_mode$
+DefVar $PROP_staticgateway$
+DefVar $PROP_staticmask$
+DefVar $PROP_staticaddress$
+DefVar $PROP_dhcp_enable$
+DefVar $PROP_setinterface$
+DefVar $PROP_interfacename$
+
+DefVar $Validate_second_dns_server_val$
+
+Set $LogDir$ = "%opsiLogDir%"
+set $PROP_prime_wins_server$ = GetProductProperty("prime_wins_server","")
+set $PROP_winssource$ = GetProductProperty("winssource","")
+set $PROP_wins_server_mode$ = GetProductProperty("wins_server_mode","")
+set $PROP_validate_second_dns_server$ = GetProductProperty("validate_second_dns_server","")
+set $PROP_second_dns_server_index$ = GetProductProperty("second_dns_server_index","")
+set $PROP_second_dns_server$ = GetProductProperty("second_dns_server","")
+set $PROP_dns_register_mode$ = GetProductProperty("dns_register_mode","")
+set $PROP_prime_dns_server$ = GetProductProperty("prime_dns_server","")
+set $PROP_dnssource$ = GetProductProperty("dnssource","")
+set $PROP_dnsserver_mode$ = GetProductProperty("dnsserver_mode","")
+set $PROP_staticgateway$ = GetProductProperty("staticgateway","")
+set $PROP_staticmask$ = GetProductProperty("staticmask","")
+set $PROP_staticaddress$ = GetProductProperty("staticaddress","")
+set $PROP_dhcp_enable$ = GetProductProperty("dhcp_enable","")
+set $PROP_setinterface$ = GetProductProperty("setinterface","")
+set $PROP_interfacename$ = GetProductProperty("interfacename","")
+
+include_append "%ScriptPath%\check_nsis_exitcode.opsiscript"
+
+; ----------------------------------------------------------------
+Set $SetupType$       = "custom"
+; ----------------------------------------------------------------
+
+; $ProductId$ is the name of the product in opsi, only lower letters, no umlauts, no white spaces, use '-' as a seperator
+Set $ProductId$       = "ica-set-net"
+Set $ProductName$       = "ICA Ethernet Interface Management"
+; the path where we find the product after the installation
+Set $InstallDir$      = "c:\users"
+Set $LicenseRequired$ = "false"
+Set $MsiId$           = ""
+Set $MinimumSpace$    = "9 MB"
+; ----------------------------------------------------------------
+; ----------------------------------------------------------------
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+   LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+   isFatalError "No Space"
+   ; Stop process and set installation status to failed
+else
+   comment "Show product picture"
+   ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $ProductId$
+
+   if FileExists("%ScriptPath%\delsub.ins")
+      comment "Start uninstall sub section"
+      Sub "%ScriptPath%\delsub.ins"
+   endif
+   
+   Message "Installing " + $ProductId$ + " ..."
+   
+
+; Install ============================================================
+   
+   comment "Start setup program"
+   
+; generate a list of the current Ethernet interface parameters
+    comment "List the Ethernet interface settings"
+    DOSInAnIconShowInterface
+    DOSInAnIconShowConfig
+
+; if then on list settings only ============================================================
+   if ($PROP_setinterface$ = "true")
+   
+; if then, else on settings dhcp ============================================================
+       if ($PROP_dhcp_enable$ = "true")
+           comment "Use a dynamic IP address"
+           DOSInAnIconUseDhcpAddress
+       else
+       	   comment "Use a static IP address"
+       	   DOSInAnIconUseStaticAddress
+       endif
+  
+; if then on settings dns properties --------------------------------------------
+       if ($PROP_dnsserver_mode$ = "true")
+           comment "Setting DNS properties"
+; case on dns source ============================================================
+; "none" -> skip all
+           if ($PROP_dnssource$ = "none")
+               comment "Not setting primary DNS properties"
+           endif
+; "static"
+           if ($PROP_dnssource$ = "static")
+               comment "Setting static primary DNS properties"
+               DOSInAnIconUseStaticDNS
+           endif
+; "dhcp"
+           if ($PROP_dnssource$ = "dhcp")
+               comment "Using Dynamic DNS properties"
+               DOSInAnIconUseDhcpDNS
+           endif
+           
+; if then, else on settings second dns server properties ========================
+           if ($PROP_second_dns_server$ = "(none)")
+               comment "No second DNS server specified"
+           else
+           	   if $PROP_validate_second_dns_server$ = "true")
+           	       $Validate_second_dns_server_val$ = "yes"
+           	   else
+           	   	   $Validate_second_dns_server_val$ = "no"
+           	   endif
+               comment "Setting DNS properties for second server"
+           	   DOSInAnIconSecondDNS
+           endif           
+; endif on settings dns properties --------------------------------------------
+       endif
+       
+; if then on settings WINS properties ============================================
+       if ($PROP_wins_server_mode$ = "true")
+           comment "Setting WINS properties"
+; case on WINS source ============================================================
+; "none" -> skip all
+           if ($PROP_winssource$ = "none")
+               comment "Not setting WINS properties"
+           endif
+; "static"
+           if ($PROP_winssource$ = "static")
+               comment "Setting static WINS properties"
+               DOSInAnIconUseStaticWINS
+           endif
+; "dhcp"
+           if ($PROP_winssource$ = "dhcp")
+               comment "Using Dynamic WINS properties"
+               DOSInAnIconUseDhcpWINS
+           endif
+; endif on settings WINS properties --------------------------------------------
+       endif
+
+;----------------------------------------------
+       Sub_check_exitcode
+       
+; list the new settings       
+       DOSInAnIconShowConfig
+       
+; endif on list settings only ============================================================
+   endif
+
+; end if on files space   
+endif
+
+; ----------------------------------------------------------------
+; Dos Batch sections
+; ----------------------------------------------------------------
+
+[DOSInAnIconShowInterface]
+netsh interface ip show interface
+
+[DOSInAnIconShowConfig]
+netsh interface ip show config
+
+[DOSInAnIconUseDhcpAddress]
+netsh interface ip set address name="$PROP_interfacename$" source=dhcp
+
+[DOSInAnIconUseStaticAddress]
+netsh interface ip set address name="$PROP_interfacename$" source=static addr="$PROP_staticaddress$" mask="$PROP_staticmask$" gateway="$PROP_staticgateway$"
+
+[DOSInAnIconUseStaticDNS]
+netsh interface ip set dnsserver name="$PROP_interfacename$" source=static addr="$PROP_prime_dns_server$" register="$PROP_dns_register_mode$"
+
+[DOSInAnIconUseDhcpDNS]
+netsh interface ip set dnsserver name="$PROP_interfacename$" source=dhcp register="$PROP_dns_register_mode$"
+
+[DOSInAnIconSecondDNS]
+netsh interface ip add dnsserver name="$PROP_interfacename$" addr="$PROP_second_dns_server$" validate="$Validate_second_dns_server_val$" index="$PROP_second_dns_server_index$"
+
+[DOSInAnIconUseStaticWINS]
+netsh interface ip set winsserver name="$PROP_interfacename$" source=static addr="$PROP_prime_wins_server$"
+
+[DOSInAnIconUseDhcpWINS]
+netsh interface ip set winsserver name="$PROP_interfacename$" source=dhcp
+
+; ----------------------------------------------------------------
+; ----------------------------------------------------------------
+
+
+
